@@ -20,6 +20,14 @@ const API_PATHS = {
     
 };
 class MuAPICli {
+    /**
+     * @param  {string} pub_key - публичный ключ для API
+     * @param  {string} prev_key - приватный ключ для API
+     * @param  {string} resource - имя ресурса с которым будет работать клиент, В случае если ресурса еще нет в БД будет создан
+     * @param  {string} resource_url - адрес ресурса с которым будет работать клиент
+     * @param  {string} host - адрес API
+     * @param  {number} port=80 -порт API
+     */
     constructor(pub_key, prev_key, resource, resource_url,host, port = 80) {
         this.pub_key  = pub_key;
         this.prev_key = prev_key;
@@ -33,7 +41,9 @@ class MuAPICli {
         })();
         
     }
-
+    /**
+     *  вызывается в конструкторе и проверяет авторизацию и наличие ресурса
+     */
     async init( ) {
         let res = await this.auth();
         if (res.success) {
@@ -47,7 +57,10 @@ class MuAPICli {
             throw new Error(`Error auth: ${res}`)
         }
     }
-
+    /**
+     * добавляет обязатедьные поля в тело запроса
+     * @param  {Object} additionals={} - передаем сюда тело запроса
+     */
     createOptions(additionals = {}) {
         let baseOpt = {
             public_key: this.pub_key,
@@ -55,12 +68,19 @@ class MuAPICli {
         let opt = Object.assign(baseOpt, additionals);
         return opt;
     }
-
+    /**
+     * @property {Function} - проверка авторизации
+     */
     auth() {
         let data = {};
         return this.request2API(API_PATHS.auth, this.createOptions(), data)
     }
-
+    /**
+     * получает список ресурсов
+     * @property {Function} - список ресурсов
+     * @param  {string} meta="" - мета данные 
+     * @returns Promise<{success: bool, api_response: Object}> смотри {@link request2API}
+     */
     resources(meta = "") {
         let data = {};
         return this.request2API(API_PATHS.resources, this.createOptions(), data, meta);
@@ -70,17 +90,30 @@ class MuAPICli {
         let data = {"resource": this.resource};
         return this.request2API(API_PATHS.resource, this.createOptions(), data, meta);
     }
-
+    /**
+     * Добавление нового ресурса
+     * @param  {string} name  - имя ресурса
+     * @param  {string} url - адрес ресурса
+     * @param  {string} meta=""
+     * @returns Promise<{success: bool, api_response: Object}> смотри {@link request2API}
+     */
     resourceAdd(name, url, meta = "") {
         let data = {resource: {name: name, url: url}};
         return this.request2API(API_PATHS.resourceAdd, this.createOptions(), data, meta);
     }
-
+    /**
+     * Каталоги текущего ресурса 
+     * @param  {} catalog={} - фильтер
+     * @param  {} meta=""
+     */
     resourceCatalog(catalog = {}, meta = "") {
         let data = {resource: this.resource, catalog: catalog};
         return this.request2API(API_PATHS.resourceCatalog, this.createOptions(), data, meta);
     }
-
+    /**
+     * Проверка существования каталогов переданных как родительские
+     * @param  {Array} parents - список id каталогов
+     */
     async checkCatalogParents(parents) {
         let data = await this.searchCatalogById(parents);
         if (data.success) {
@@ -183,7 +216,12 @@ class MuAPICli {
             .toLowerCase();
         return hash;
     }
-
+    /**
+     * @param  {} path
+     * @param  {} opt
+     * @param  {} data
+     * @param  {} meta=""
+     */
     async request2API(path, opt, data, meta = "") {
         data.time = Math.floor(new Date().getTime() / 1000)
         let strData = JSON.stringify(data);
