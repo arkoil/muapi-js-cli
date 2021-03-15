@@ -1,15 +1,15 @@
 const api = require("./index");
 
-const cli = new api.MuAPICli("xxxx", "qqqq", "wb", "http://localhost", 4000);
+const cli = new api.MuAPICli("xxxx", "qqqq", "wb", "https://www.wildberries.ru/", "http://localhost", 4000);
 auth               = cli.auth();
 resources          = cli.resources();
 resource           = cli.resourceGet();
 resourceAdd        = cli.resourceAdd("wb", "https://www.wildberries.ru/");
 resourceCatalog    = cli.resourceCatalog("wb");
-// resourceCatalogAdd = cli.resourceCatalogAdd("одежда", "https://www.wildberries.ru/catalog/muzhchinam/odezhda", "Moscow");
+resourceCatalogAdd = cli.resourceCatalogAdd("одежда", "https://www.wildberries.ru/catalog/muzhchinam/odezhda", "Moscow");
 resourceCatalogItem = cli.resourceCatalogItem();
 resourceCatalogItemAdd = cli.resourceCatalogItemAdd(" Футболка", "https://www.wildberries.ru/catalog/11566676/detail.aspx?targetUrl=GP", "Moscow", {parent_id: null, catalog_id: "604de597c11b3a65e50319f5"});
-getItemStruct = cli.getItemStruct("604ebfa6c11b3a7dc714d186");
+// getItemStruct = cli.getItemStruct("604ec877c11b3a7dc79f2016");
 
 apiConn = async function(prom) {
     let res = await prom;
@@ -22,8 +22,8 @@ apiConn(resources);
 apiConn(resource);
 apiConn(resourceAdd);
 apiConn(resourceCatalog);
-// apiConn(resourceCatalogAdd);
+apiConn(resourceCatalogAdd);
 apiConn(resourceCatalogItem);
 apiConn(resourceCatalogItemAdd);
-apiConn(getItemStruct);
+// apiConn(getItemStruct);
 
