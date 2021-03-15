@@ -71,9 +71,9 @@ class MuAPICli {
     /**
      * @property {Function} - проверка авторизации
      */
-    auth() {
+    auth(meta = "") {
         let data = {};
-        return this.request2API(API_PATHS.auth, this.createOptions(), data)
+        return this.request2API(API_PATHS.auth, this.createOptions({meta: meta}), data)
     }
     /**
      * получает список ресурсов
@@ -83,12 +83,12 @@ class MuAPICli {
      */
     resources(meta = "") {
         let data = {};
-        return this.request2API(API_PATHS.resources, this.createOptions(), data, meta);
+        return this.request2API(API_PATHS.resources, this.createOptions({meta: meta}), data);
     }
 
     resourceGet(meta = "") {
         let data = {"resource": this.resource};
-        return this.request2API(API_PATHS.resource, this.createOptions(), data, meta);
+        return this.request2API(API_PATHS.resource, this.createOptions({meta: meta}), data);
     }
     /**
      * Добавление нового ресурса
@@ -99,7 +99,7 @@ class MuAPICli {
      */
     resourceAdd(name, url, meta = "") {
         let data = {resource: {name: name, url: url}};
-        return this.request2API(API_PATHS.resourceAdd, this.createOptions(), data, meta);
+        return this.request2API(API_PATHS.resourceAdd, this.createOptions({meta: meta}), data);
     }
     /**
      * Каталоги текущего ресурса 
@@ -108,7 +108,7 @@ class MuAPICli {
      */
     resourceCatalog(catalog = {}, meta = "") {
         let data = {resource: this.resource, catalog: catalog};
-        return this.request2API(API_PATHS.resourceCatalog, this.createOptions(), data, meta);
+        return this.request2API(API_PATHS.resourceCatalog, this.createOptions({meta: meta}), data);
     }
     /**
      * Проверка существования каталогов переданных как родительские
@@ -155,12 +155,12 @@ class MuAPICli {
         }
         catalog = Object.assign(catalogModel, catalog);
         let data = {"resource": this.resource, "catalog": catalog};
-        return this.request2API(API_PATHS.resourceCatalogAdd, this.createOptions(), data, meta);
+        return this.request2API(API_PATHS.resourceCatalogAdd, this.createOptions({meta: meta}), data);
     }
 
     resourceCatalogItem(meta = "") {
         let data = {resource: this.resource, item: {}};
-        return this.request2API(API_PATHS.resourceCatalogItem, this.createOptions(), data, meta);
+        return this.request2API(API_PATHS.resourceCatalogItem, this.createOptions({meta: meta}), data);
     }
 
     async resourceCatalogItemAdd(name, url, region, catalog_id, other = {}, meta = "") {
@@ -188,24 +188,24 @@ class MuAPICli {
         item = Object.assign(catalogModel, item);
 
         let data = {resource: this.resource, item: item};
-        return this.request2API(API_PATHS.resourceCatalogItemAdd, this.createOptions(), data, meta);
+        return this.request2API(API_PATHS.resourceCatalogItemAdd, this.createOptions({meta: meta}), data);
     }
 
     getItemStruct(item_id, meta = "") {
         let data = {resource: this.resource, item_id: item_id};
-        return this.request2API(API_PATHS.getItemStruct, this.createOptions(), data, meta);
+        return this.request2API(API_PATHS.getItemStruct, this.createOptions({meta: meta}), data);
     }
 
     searchCatalog(type, request = {}, additional = {}, meta = "") {
         let data = {resource: this.resource, type: type, request: request};
         data = Object.assign(data, additional);
-        return this.request2API(API_PATHS.resourceSearchCatalog, this.createOptions(), data, meta);
+        return this.request2API(API_PATHS.resourceSearchCatalog, this.createOptions({meta: meta}), data);
 
     }
 
     searchCatalogById(ids, id_field = "_id", meta = "") {
         let data = {id_field: id_field, id_values: ids};
-        return this.searchCatalog("by_ids", {}, data, meta);
+        return this.searchCatalog("by_ids", {}, data);
     }
 
     createSign(strData) {
@@ -222,7 +222,7 @@ class MuAPICli {
      * @param  {} data
      * @param  {} meta=""
      */
-    async request2API(path, opt, data, meta = "") {
+    async request2API(path, opt, data) {
         data.time = Math.floor(new Date().getTime() / 1000)
         let strData = JSON.stringify(data);
         opt.data = strData;
