@@ -21,12 +21,15 @@ const API_PATHS = {
 };
 class MuAPICli {
     /**
-     * @param  {string} pub_key - публичный ключ для API
-     * @param  {string} prev_key - приватный ключ для API
+     * Конструктор класса клиента
+     * @constructor
+     * @param  {string} pub_key - публичный ключ API
+     * @param  {string} prev_key - приватный ключ API
      * @param  {string} resource - имя ресурса с которым будет работать клиент, В случае если ресурса еще нет в БД будет создан
      * @param  {string} resource_url - адрес ресурса с которым будет работать клиент
-     * @param  {string} host - адрес API
-     * @param  {number} port=80 -порт API
+     * @param  {string} host - адрес API ```"domain.name"``` | ```"127.0.0.1"```
+     * @param  {number} port - по умолчанию: 80 - порт на котором АПИ ждет соединение
+     * 
      */
     constructor(pub_key, prev_key, resource, resource_url,host, port = 80) {
         this.pub_key  = pub_key;
@@ -43,6 +46,7 @@ class MuAPICli {
     }
     /**
      *  вызывается в конструкторе и проверяет авторизацию и наличие ресурса
+     * @async
      */
     async init( ) {
         let res = await this.auth();
@@ -58,8 +62,9 @@ class MuAPICli {
         }
     }
     /**
-     * добавляет обязатедьные поля в тело запроса
+     * добавляет обязательные поля в тело запроса
      * @param  {Object} additionals={} - передаем сюда тело запроса
+     * @returns {Object} Возвращает объединенный объект с полями
      */
     createOptions(additionals = {}) {
         let baseOpt = {
@@ -69,7 +74,8 @@ class MuAPICli {
         return opt;
     }
     /**
-     * @property {Function} - проверка авторизации
+     * проверка авторизации
+     * @async
      */
     auth() {
         let data = {};
@@ -77,15 +83,20 @@ class MuAPICli {
     }
     /**
      * получает список ресурсов
-     * @property {Function} - список ресурсов
-     * @param  {string} meta="" - мета данные 
-     * @returns Promise<{success: bool, api_response: Object}> смотри {@link request2API}
+     * @async
+     * @param  {string} meta   мета данные по умолчанию ```""```
+     * @returns {Promise} Promise объект:```{success: true|false, api_response: any}```
      */
     resources(meta = "") {
         let data = {};
         return this.request2API(API_PATHS.resources, this.createOptions(), data, meta);
     }
-
+    /**
+     * получает конкретный ресурс
+     * @async
+     * @param  {string} meta   мета данные по умолчанию ```""```
+     * @returns {Promise} Promise объект:```{success: true|false, api_response: any}```
+     */
     resourceGet(meta = "") {
         let data = {"resource": this.resource};
         return this.request2API(API_PATHS.resource, this.createOptions(), data, meta);
@@ -95,7 +106,7 @@ class MuAPICli {
      * @param  {string} name  - имя ресурса
      * @param  {string} url - адрес ресурса
      * @param  {string} meta=""
-     * @returns Promise<{success: bool, api_response: Object}> смотри {@link request2API}
+     * @returns {Promise} Promise объект:```{success: true|false, api_response: any}```
      */
     resourceAdd(name, url, meta = "") {
         let data = {resource: {name: name, url: url}};
@@ -105,6 +116,7 @@ class MuAPICli {
      * Каталоги текущего ресурса 
      * @param  {} catalog={} - фильтер
      * @param  {} meta=""
+     * @returns {Promise} Promise объект:```{success: true|false, api_response: any}```
      */
     resourceCatalog(catalog = {}, meta = "") {
         let data = {resource: this.resource, catalog: catalog};
@@ -113,6 +125,7 @@ class MuAPICli {
     /**
      * Проверка существования каталогов переданных как родительские
      * @param  {Array} parents - список id каталогов
+     * @returns {(Boolean | Error)} вернет true если родители существуют и вызовет ошибку если нет
      */
     async checkCatalogParents(parents) {
         let data = await this.searchCatalogById(parents);
@@ -131,7 +144,15 @@ class MuAPICli {
             throw new Error(data);
         }
     }
-
+    /**
+     * 
+     * @param {String} name 
+     * @param {String} url 
+     * @param {String} region 
+     * @param {Object} other 
+     * @param {String} meta 
+     * @returns Promise<{success: boolean;api_response: any;}>
+     */
     async resourceCatalogAdd(name, url, region, other = {}, meta = "") {
         let catalog = {name: name, url: url, region: region};
         for (let field in catalogModel) {
@@ -157,12 +178,25 @@ class MuAPICli {
         let data = {"resource": this.resource, "catalog": catalog};
         return this.request2API(API_PATHS.resourceCatalogAdd, this.createOptions(), data, meta);
     }
-
+    /**
+     * 
+     * @param {String} meta 
+     * @returns 
+     */
     resourceCatalogItem(meta = "") {
         let data = {resource: this.resource, item: {}};
         return this.request2API(API_PATHS.resourceCatalogItem, this.createOptions(), data, meta);
     }
-
+    /**
+     * 
+     * @param {String} name 
+     * @param {String} url 
+     * @param {String} region 
+     * @param {String} catalog_id 
+     * @param {Object} other 
+     * @param {String} meta 
+     * @returns Promise<{success: boolean;api_response: any;}>
+     */
     async resourceCatalogItemAdd(name, url, region, catalog_id, other = {}, meta = "") {
         let item = {name: name, url: url, region: region, catalog_id: catalog_id};
         for (let field in itemModel) {
@@ -190,24 +224,46 @@ class MuAPICli {
         let data = {resource: this.resource, item: item};
         return this.request2API(API_PATHS.resourceCatalogItemAdd, this.createOptions(), data, meta);
     }
-
+    /**
+     * 
+     * @param {String} item_id 
+     * @param {String} meta 
+     * @returns Promise<{success: boolean;api_response: any;}>
+     */
     getItemStruct(item_id, meta = "") {
         let data = {resource: this.resource, item_id: item_id};
         return this.request2API(API_PATHS.getItemStruct, this.createOptions(), data, meta);
     }
-
+    /**
+     * 
+     * @param {String} type 
+     * @param {Object} request 
+     * @param {Object} additional 
+     * @param {String} meta 
+     * @returns Promise<{success: boolean;api_response: any;}>
+     */
     searchCatalog(type, request = {}, additional = {}, meta = "") {
         let data = {resource: this.resource, type: type, request: request};
         data = Object.assign(data, additional);
         return this.request2API(API_PATHS.resourceSearchCatalog, this.createOptions(), data, meta);
 
     }
-
+    /**
+     * 
+     * @param {array} ids 
+     * @param {string} id_field 
+     * @param {string} meta 
+     * @returns 
+     */
     searchCatalogById(ids, id_field = "_id", meta = "") {
         let data = {id_field: id_field, id_values: ids};
         return this.searchCatalog("by_ids", {}, data, meta);
     }
-
+    /**
+     * 
+     * @param {string} strData 
+     * @returns string
+     */
     createSign(strData) {
         const hash = require("crypto")
             .createHash("sha256")
@@ -217,10 +273,10 @@ class MuAPICli {
         return hash;
     }
     /**
-     * @param  {} path
-     * @param  {} opt
-     * @param  {} data
-     * @param  {} meta=""
+     * @param  {String} path
+     * @param  {any} opt
+     * @param  {Object} data
+     * @param  {String} meta=""
      */
     async request2API(path, opt, data, meta = "") {
         data.time = Math.floor(new Date().getTime() / 1000)
