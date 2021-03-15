@@ -1,4 +1,4 @@
-exports.item = {
+module.exports = {
     additional: nil,
     article: nil,
     brand: nil,

@@ -1,9 +1,9 @@
-exports.catalog = {
+module.exports = {
     name: null,
     description: null,
     external_id: null,
     region: null,
-    parents: null,
+    parents: [],
     parent_id: null,
     image: null,
     url: null,

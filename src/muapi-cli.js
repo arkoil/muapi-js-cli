@@ -2,17 +2,20 @@ const axios = require("axios");
 const catalogModel = require("./models/catalog");
 const itemModel = require("./models/catalog");
 const { ALPN_ENABLED } = require("constants");
-const { request } = require("https");
+
 const API_PATHS = {
     auth:                   "/auth",
     resources:              "/resources",
     resource:               "/resource",
-    resourceAdd:           "/resource/add",
+    resourceAdd:            "/resource/add",
     resourceCatalog:        "/resource/catalog",
     resourceCatalogAdd:     "/resource/catalog/add",
     resourceCatalogItem:    "/resource/catalog/item",
     resourceCatalogItemAdd: "/resource/catalog/item/add",
-    getItemStruct: "/resource/get_item_struct",
+    getItemStruct:          "/resource/get_item_struct",
+    resourceSearchItem:     "/resource/search/item",
+    resourceSearchCatalog:     "/resource/search/catalog",
+
 
     
 };
@@ -73,12 +76,30 @@ class MuAPICli {
         return this.request2API(API_PATHS.resourceAdd, this.createOptions(), data, meta);
     }
 
-    resourceCatalog(meta = "") {
-        let data = {resource: this.resource, catalog: {}};
+    resourceCatalog(catalog = {}, meta = "") {
+        let data = {resource: this.resource, catalog: catalog};
         return this.request2API(API_PATHS.resourceCatalog, this.createOptions(), data, meta);
     }
 
-    resourceCatalogAdd(name, url, region, other = {}, meta = "") {
+    async checkCatalogParents(parents) {
+        let data = await this.searchCatalogById(parents);
+        if (data.success) {
+            console.log(data.api_response.data.length);
+            console.log(parents.length);
+            console.log(data.api_response.data.length < parents.length);
+            if (data.api_response.data.length < parents.length) {
+                console.log("invalid");
+                throw  new Error("Not found catalog parent");
+            } else {
+                console.log("valid");
+                return true;
+            }
+        } else {
+            throw new Error(data);
+        }
+    }
+
+    async resourceCatalogAdd(name, url, region, other = {}, meta = "") {
         let catalog = {name: name, url: url, region: region};
         for (let field in catalogModel) {
             if (other[field]) {
@@ -86,6 +107,18 @@ class MuAPICli {
             } else {
                 delete catalogModel[field];
             }
+        }
+        let parent_id = catalogModel.parent_id;
+        if (parent_id) {
+            if (!catalogModel.parents){
+                catalogModel.parents = [];
+            }
+            if (!catalogModel.parents.includes(parent_id)) {
+                catalogModel.parents.push(parent_id);
+            }
+        }
+        if (catalogModel.parents.length>0) {
+            await this.checkCatalogParents(catalogModel.parents);
         }
         catalog = Object.assign(catalogModel, catalog);
         let data = {"resource": this.resource, "catalog": catalog};
@@ -97,8 +130,8 @@ class MuAPICli {
         return this.request2API(API_PATHS.resourceCatalogItem, this.createOptions(), data, meta);
     }
 
-    resourceCatalogItemAdd(name, url, region, other = {}, meta = "") {
-        let item = {name: name, url: url, region: region};
+    async resourceCatalogItemAdd(name, url, region, catalog_id, other = {}, meta = "") {
+        let item = {name: name, url: url, region: region, catalog_id: catalog_id};
         for (let field in itemModel) {
             if (other[field]) {
                 itemModel[field] = other[field];
@@ -106,6 +139,19 @@ class MuAPICli {
                 delete itemModel[field];
             }
         }
+
+        if (catalog_id) {
+            if (!itemModel.catalogs){
+                itemModel.catalogs = [];
+            }
+            if (!itemModel.catalogs.includes(catalog_id)) {
+                itemModel.catalogs.push(catalog_id);
+            }
+            await this.checkCatalogParents(itemModel.catalogs);
+        } else {
+            throw new Error("Item must contain a catalog_id ");
+        }
+
         item = Object.assign(catalogModel, item);
 
         let data = {resource: this.resource, item: item};
@@ -115,6 +161,18 @@ class MuAPICli {
     getItemStruct(item_id, meta = "") {
         let data = {resource: this.resource, item_id: item_id};
         return this.request2API(API_PATHS.getItemStruct, this.createOptions(), data, meta);
+    }
+
+    searchCatalog(type, request = {}, additional = {}, meta = "") {
+        let data = {resource: this.resource, type: type, request: request};
+        data = Object.assign(data, additional);
+        return this.request2API(API_PATHS.resourceSearchCatalog, this.createOptions(), data, meta);
+
+    }
+
+    searchCatalogById(ids, id_field = "_id", meta = "") {
+        let data = {id_field: id_field, id_values: ids};
+        return this.searchCatalog("by_ids", {}, data, meta);
     }
 
     createSign(strData) {
@@ -136,7 +194,11 @@ class MuAPICli {
             return {success: true, api_response: response.data};
         } catch(err) {
                 console.log(err);
-                return {success: false, api_response: err.response.data};
+                if (err.errno == -61) {
+                    throw new Error("Not connected to server")
+                } else {
+                    return {success: false, api_response: err.response.data};
+                }
         }
     }
 }
