@@ -23,13 +23,13 @@ class MuAPICli {
     /**
      * Конструктор класса клиента
      * @constructor
-     * @param  {string} pub_key - публичный ключ API
-     * @param  {string} prev_key - приватный ключ API
-     * @param  {string} resource - имя ресурса с которым будет работать клиент, В случае если ресурса еще нет в БД будет создан
-     * @param  {string} resource_url - адрес ресурса с которым будет работать клиент
-     * @param  {string} host - адрес API ```"domain.name"``` | ```"127.0.0.1"```
-     * @param  {number} port - по умолчанию: 80 - порт на котором АПИ ждет соединение
-     * 
+     * @param  {string} pub_key публичный ключ API
+     * @param  {string} prev_key приватный ключ API
+     * @param  {string} resource имя ресурса, если ресурса нет в БД, он будет создан
+     * @param  {string} resource_url адрес ресурса (нужен для создания, если вы уверены, что ресурс существует, укажите просто: ```""```)
+     * @param  {string} host адрес API ```"domain.name"``` | ```"127.0.0.1"```
+     * @param  {number} port по умолчанию: 80 - порт на котором АПИ ждет соединение
+     * @example new MuAPICli("")
      */
     constructor(pub_key, prev_key, resource, resource_url,host, port = 80) {
         this.pub_key  = pub_key;
@@ -63,7 +63,7 @@ class MuAPICli {
     }
     /**
      * добавляет обязательные поля в тело запроса
-     * @param  {Object} additionals={} - передаем сюда тело запроса
+     * @param  {Object} additionals тело запроса
      * @returns {Object} Возвращает объединенный объект с полями
      */
     createOptions(additionals = {}) {
@@ -84,8 +84,8 @@ class MuAPICli {
     /**
      * получает список ресурсов
      * @async
-     * @param  {string} meta   мета данные по умолчанию ```""```
-     * @returns {Promise} Promise объект:```{success: true|false, api_response: any}```
+     * @param  {string} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
+     * @returns {Promise<{success: Boolean, api_response: Object}>} Promise объект:```{success: true|false, api_response: any}```
      */
     resources(meta = "") {
         let data = {};
@@ -95,7 +95,7 @@ class MuAPICli {
      * получает конкретный ресурс
      * @async
      * @param  {string} meta   мета данные по умолчанию ```""```
-     * @returns {Promise} Promise объект:```{success: true|false, api_response: any}```
+     * @returns {Promise<{success: Boolean, api_response: Object}>} Promise объект:```{success: true|false, api_response: any}```
      */
     resourceGet(meta = "") {
         let data = {"resource": this.resource};
@@ -103,10 +103,11 @@ class MuAPICli {
     }
     /**
      * Добавление нового ресурса
+     * @async
      * @param  {string} name  - имя ресурса
      * @param  {string} url - адрес ресурса
-     * @param  {string} meta=""
-     * @returns {Promise} Promise объект:```{success: true|false, api_response: any}```
+     * @param  {string} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
+     * @returns {Promise<{success: Boolean, api_response: Object}>} Promise объект:```{success: true|false, api_response: any}```
      */
     resourceAdd(name, url, meta = "") {
         let data = {resource: {name: name, url: url}};
@@ -114,9 +115,10 @@ class MuAPICli {
     }
     /**
      * Каталоги текущего ресурса 
-     * @param  {} catalog={} - фильтер
-     * @param  {} meta=""
-     * @returns {Promise} Promise объект:```{success: true|false, api_response: any}```
+     * @async
+     * @param  {string} catalog запрос в базу ...collection.find(```{...}```), см [документацию монго](https://docs.mongodb.com/manual/tutorial/query-documents/)
+     * @param  {string} meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
+     * @returns {Promise<{success: Boolean, api_response: Object}>} Promise объект:```{success: true|false, api_response: any}```
      */
     resourceCatalog(catalog = {}, meta = "") {
         let data = {resource: this.resource, catalog: catalog};
@@ -124,11 +126,12 @@ class MuAPICli {
     }
     /**
      * Проверка существования каталогов переданных как родительские
+     * @async
      * @param  {Array} parents - список id каталогов
      * @returns {(Boolean | Error)} вернет true если родители существуют и вызовет ошибку если нет
      */
     async checkCatalogParents(parents) {
-        let data = await this.searchCatalogById(parents);
+        let data = await this.searchCatalogsById(parents);
         if (data.success) {
             console.log(data.api_response.data.length);
             console.log(parents.length);
@@ -145,12 +148,25 @@ class MuAPICli {
         }
     }
     /**
-     * 
-     * @param {String} name 
-     * @param {String} url 
-     * @param {String} region 
-     * @param {Object} other 
-     * @param {String} meta 
+     * Добавляем каталог в ресурс
+     * @async
+     * @param {String} name Имя каталога (как в источнике)
+     * @param {String} url Урл каталога
+     * @param {String} region Регион, если он имеется, если нет то просто ```""```, Внимание! если регион имеется в источнике, но вы просто опустили эти данные, настоятельно рекомендуется данные получить и передать! Простое затыкание данных ```""``` вызовет серьезные проблемы в будующем! Убедитесь, что ресурс действительно не содержит данных по региону прежде чем передать пустое поле!
+     * @param {Object} other Все остальные данные каталога:
+     *  {
+     *    
+     *    ```description:``` string,  
+     *    ```external_id:``` string,  
+     *    ```parents:``` array(BSON.Id.toString), - массив родительских категорий  
+     *    ```parent_id:``` BSON.Id.toString,  
+     *    ```image:``` string,  
+     *    ```url:``` string,  
+     *    ```additional:``` Object,  
+     *    ```uniform_name:``` string  
+     *                  
+     *  }
+     * @param {String} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns Promise<{success: boolean;api_response: any;}>
      */
     async resourceCatalogAdd(name, url, region, other = {}, meta = "") {
@@ -179,12 +195,14 @@ class MuAPICli {
         return this.request2API(API_PATHS.resourceCatalogAdd, this.createOptions({meta: meta}), data);
     }
     /**
-     * 
-     * @param {String} meta 
+     * Получение списка айтэмов у данного ресурса
+     * @async
+     * @param {string} find_by критерий отбора 
+     * @param {String} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns 
      */
-    resourceCatalogItem(meta = "") {
-        let data = {resource: this.resource, item: {}};
+    resourceCatalogItem(find_by ={}, meta = "") {
+        let data = {resource: this.resource, item: find_by};
         return this.request2API(API_PATHS.resourceCatalogItem, this.createOptions({meta: meta}), data);
     }
     /**
@@ -194,7 +212,7 @@ class MuAPICli {
      * @param {String} region 
      * @param {String} catalog_id 
      * @param {Object} other 
-     * @param {String} meta 
+     * @param {String} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns Promise<{success: boolean;api_response: any;}>
      */
     async resourceCatalogItemAdd(name, url, region, catalog_id, other = {}, meta = "") {
@@ -225,9 +243,10 @@ class MuAPICli {
         return this.request2API(API_PATHS.resourceCatalogItemAdd, this.createOptions({meta: meta}), data);
     }
     /**
-     * 
-     * @param {String} item_id 
-     * @param {String} meta 
+     * Получение полной структуры айтема включая каталог
+     * @async 
+     * @param {String} item_id BSONObjectId - текстовое представление
+     * @param {String} meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns Promise<{success: boolean;api_response: any;}>
      */
     getItemStruct(item_id, meta = "") {
@@ -235,32 +254,37 @@ class MuAPICli {
         return this.request2API(API_PATHS.getItemStruct, this.createOptions({meta: meta}), data);
     }
     /**
-     * 
-     * @param {String} type 
-     * @param {Object} request 
+     * Поиск по каталогам
+     * @async
+     * @param {String} type тип поиска на данный момент поддерживается только "by_ids"
+     * @param {Object} request дополнительные критерии поиска, например: ```{name: "Пылесос 1"}```
      * @param {Object} additional 
-     * @param {String} meta 
+     * @param {String} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns Promise<{success: boolean;api_response: any;}>
+     * @example searchCatalog("by_ids",{region:"Moscow"},{id_field: "_id", values:["604f34e0b37c79215a61d9b2"]})
      */
-    searchCatalog(type, request = {}, additional = {}, meta = "") {
+    searchCatalogs(type, request = {}, additional = {}, meta = "") {
         let data = {resource: this.resource, type: type, request: request};
         data = Object.assign(data, additional);
         return this.request2API(API_PATHS.resourceSearchCatalog, this.createOptions({meta: meta}), data);
 
     }
     /**
-     * 
-     * @param {array} ids 
-     * @param {string} id_field 
-     * @param {string} meta 
+     * Метод хелпер для вызова поиска с типом ```"by_ids"```
+     * @async
+     * @param {array} ids массив значений ид которые будем искать
+     * @param {string} id_field определяющее поле по которому будем искать
+     * @param {string} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns 
+     * @example searchCatalogsById(["604f34e0b37c79215a61d9b2"],"_id", "searchCatalogEvent[084521]")
+     * 
      */
-    searchCatalogById(ids, id_field = "_id", meta = "") {
+    searchCatalogsById(ids, id_field = "_id", meta = "") {
         let data = {id_field: id_field, id_values: ids};
-        return this.searchCatalog("by_ids", {}, data);
+        return this.searchCatalogs("by_ids", {}, data);
     }
     /**
-     * 
+     * Создание цифровой подписи для данных
      * @param {string} strData 
      * @returns string
      */
@@ -273,10 +297,11 @@ class MuAPICli {
         return hash;
     }
     /**
+     * Запрос в АПИ
+     * @async
      * @param  {String} path
      * @param  {any} opt
      * @param  {Object} data
-     * @param  {String} meta=""
      */
     async request2API(path, opt, data) {
         data.time = Math.floor(new Date().getTime() / 1000)
