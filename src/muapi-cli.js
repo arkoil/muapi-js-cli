@@ -161,13 +161,13 @@ class MuAPICli {
      *    ```parents:``` array(BSON.Id.toString), - массив родительских категорий  
      *    ```parent_id:``` BSON.Id.toString,  
      *    ```image:``` string,  
-     *    ```url:``` string,  
      *    ```additional:``` Object,  
      *    ```uniform_name:``` string  
      *                  
      *  }
      * @param {String} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
-     * @returns Promise<{success: boolean;api_response: any;}>
+     * @returns {Promise<{success: Boolean, api_response: Object}>} Promise объект:```{success: true|false, api_response: any}```
+     * @example resourceCatalogAdd("Пылысосы", "https://wildberries.com/pilesos", "Moscow", {description: "Пылесосы с бесплатной доставкой на Wildberries", external_id: "12345", parents: ["604f34e0b37c79215a61d9b2"], parent_id: "604f34e0b37c79215a61d9b2", image: "https://wilberries.com/imgs/123.png", additional:{filters:[{filter_id: 123}]}, uniform_name: "pilesos"}, "pilesos_add_12345")
      */
     async resourceCatalogAdd(name, url, region, other = {}, meta = "") {
         let catalog = {name: name, url: url, region: region};
@@ -200,6 +200,7 @@ class MuAPICli {
      * @param {string} find_by критерий отбора 
      * @param {String} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns 
+     * 
      */
     resourceCatalogItem(find_by ={}, meta = "") {
         let data = {resource: this.resource, item: find_by};
@@ -214,6 +215,7 @@ class MuAPICli {
      * @param {Object} other 
      * @param {String} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns Promise<{success: boolean;api_response: any;}>
+     * @example resourceItemAdd("Пылысос 1", "https://wildberries.com/pilesos/1", "Moscow", {description: "Самый сосущий пылесос на Wildberries", external_id: "12345", rating: 0.5, model: "pil1", price: 1000.0, reviews:10, currency: "RUB", article: 087956, catalogs: ["604f34e0b37c79215a61d9b2"], catalog_id: "604f34e0b37c79215a61d9b2", image: "https://wilberries.com/imgs/123.png", additional:{filters:[{filter_id: 123}]}, uniform_name: "pil1"}, "pil_add_1")
      */
     async resourceCatalogItemAdd(name, url, region, catalog_id, other = {}, meta = "") {
         let item = {name: name, url: url, region: region, catalog_id: catalog_id};
@@ -299,8 +301,8 @@ class MuAPICli {
     /**
      * Запрос в АПИ
      * @async
-     * @param  {String} path
-     * @param  {any} opt
+     * @param  {String} path "путь в рамках роутов АПИ"
+     * @param  {any} opt 
      * @param  {Object} data
      */
     async request2API(path, opt, data) {
@@ -314,7 +316,7 @@ class MuAPICli {
         } catch(err) {
                 console.log(err);
                 if (err.errno == -61) {
-                    throw new Error("Not connected to server")
+                    throw new Error("Connection refused")
                 } else {
                     return {success: false, api_response: err.response.data};
                 }
