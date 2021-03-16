@@ -215,7 +215,7 @@ class MuAPICli {
      * @param {Object} other 
      * @param {String} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns Promise<{success: boolean;api_response: any;}>
-     * @example resourceItemAdd("Пылысос 1", "https://wildberries.com/pilesos/1", "Moscow", {description: "Самый сосущий пылесос на Wildberries", external_id: "12345", rating: 0.5, model: "pil1", price: 1000.0, reviews:10, currency: "RUB", article: 087956, catalogs: ["604f34e0b37c79215a61d9b2"], catalog_id: "604f34e0b37c79215a61d9b2", image: "https://wilberries.com/imgs/123.png", additional:{filters:[{filter_id: 123}]}, uniform_name: "pil1"}, "pil_add_1")
+     * @example resourceItemAdd("Пылысос 1", "https://wildberries.com/pilesos/1", "Moscow", {description: "Самый сосущий пылесос на Wildberries", external_id: "12345", rating: 0.5, model: "pil1", price: 1000.0, reviews:10, currency: "RUB", article: 087956, catalogs: ["604f34e0b37c79215a61d9b2"], catalog_id: "604f34e0b37c79215a61d9b2", image: "https://wilberries.com/imgs/123.png", additional: {filters: [ { filter_id: 123, value: "мега пылесос" } ] }, uniform_name: "pil1"}, "pil_add_1")
      */
     async resourceCatalogItemAdd(name, url, region, catalog_id, other = {}, meta = "") {
         let item = {name: name, url: url, region: region, catalog_id: catalog_id};
@@ -260,7 +260,7 @@ class MuAPICli {
      * @async
      * @param {String} type тип поиска на данный момент поддерживается только "by_ids"
      * @param {Object} request дополнительные критерии поиска, например: ```{name: "Пылесос 1"}```
-     * @param {Object} additional 
+     * @param {Object} additional основное тело запроса (почему же additional?)
      * @param {String} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns Promise<{success: boolean;api_response: any;}>
      * @example searchCatalog("by_ids",{region:"Moscow"},{id_field: "_id", values:["604f34e0b37c79215a61d9b2"]})
