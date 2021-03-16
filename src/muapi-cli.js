@@ -29,7 +29,8 @@ class MuAPICli {
      * @param  {string} resource_url адрес ресурса (нужен для создания, если вы уверены, что ресурс существует, укажите просто: ```""```)
      * @param  {string} host адрес API ```"domain.name"``` | ```"127.0.0.1"```
      * @param  {number} port по умолчанию: 80 - порт на котором АПИ ждет соединение
-     * @example new MuAPICli("")
+     * @example const api = require("muapi-js-cli")
+     * @example const cli = new api.MuAPICli("pub_key", "priv_key", "resource", "https://www.resource.ru/", "http://api.com", 2233);
      */
     constructor(pub_key, prev_key, resource, resource_url,host, port = 80) {
         this.pub_key  = pub_key;
@@ -120,7 +121,7 @@ class MuAPICli {
      * @param  {string} meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns {Promise<{success: Boolean, api_response: Object}>} Promise объект:```{success: true|false, api_response: any}```
      */
-    resourceCatalog(catalog = {}, meta = "") {
+    catalogs(catalog = {}, meta = "") {
         let data = {resource: this.resource, catalog: catalog};
         return this.request2API(API_PATHS.resourceCatalog, this.createOptions({meta: meta}), data);
     }
@@ -169,7 +170,7 @@ class MuAPICli {
      * @returns {Promise<{success: Boolean, api_response: Object}>} Promise объект:```{success: true|false, api_response: any}```
      * @example resourceCatalogAdd("Пылысосы", "https://wildberries.com/pilesos", "Moscow", {description: "Пылесосы с бесплатной доставкой на Wildberries", external_id: "12345", parents: ["604f34e0b37c79215a61d9b2"], parent_id: "604f34e0b37c79215a61d9b2", image: "https://wilberries.com/imgs/123.png", additional:{filters:[{filter_id: 123}]}, uniform_name: "pilesos"}, "pilesos_add_12345")
      */
-    async resourceCatalogAdd(name, url, region, other = {}, meta = "") {
+    async catalogAdd(name, url, region, other = {}, meta = "") {
         let catalog = {name: name, url: url, region: region};
         for (let field in catalogModel) {
             if (other[field]) {
@@ -202,7 +203,7 @@ class MuAPICli {
      * @returns 
      * 
      */
-    resourceCatalogItem(find_by ={}, meta = "") {
+    items(find_by ={}, meta = "") {
         let data = {resource: this.resource, item: find_by};
         return this.request2API(API_PATHS.resourceCatalogItem, this.createOptions({meta: meta}), data);
     }
@@ -215,9 +216,9 @@ class MuAPICli {
      * @param {Object} other 
      * @param {String} meta meta по умолчанию ```""``` , вернется как есть, служит для индентификации событий, при событийной модели на стороне клиента
      * @returns Promise<{success: boolean;api_response: any;}>
-     * @example resourceItemAdd("Пылысос 1", "https://wildberries.com/pilesos/1", "Moscow", {description: "Самый сосущий пылесос на Wildberries", external_id: "12345", rating: 0.5, model: "pil1", price: 1000.0, reviews:10, currency: "RUB", article: 087956, catalogs: ["604f34e0b37c79215a61d9b2"], catalog_id: "604f34e0b37c79215a61d9b2", image: "https://wilberries.com/imgs/123.png", additional: {filters: [ { filter_id: 123, value: "мега пылесос" } ] }, uniform_name: "pil1"}, "pil_add_1")
+     * @example resourceItemAdd("Пылысос 1", "https://wildberries.com/pilesos/1", "Moscow", "604e0c39c11b3a7dc7a35d01", {description: "Самый сосущий пылесос на Wildberries", external_id: "12345", rating: 0.5, model: "pil1", price: 1000.0, reviews:10, currency: "RUB", article: 087956, catalogs: ["604f34e0b37c79215a61d9b2"], catalog_id: "604f34e0b37c79215a61d9b2", image: "https://wilberries.com/imgs/123.png", additional: {filters: [ { filter_id: 123, value: "мега пылесос" } ] }, uniform_name: "pil1"}, "pil_add_1")
      */
-    async resourceCatalogItemAdd(name, url, region, catalog_id, other = {}, meta = "") {
+    async itemAdd(name, url, region, catalog_id, other = {}, meta = "") {
         let item = {name: name, url: url, region: region, catalog_id: catalog_id};
         for (let field in itemModel) {
             if (other[field]) {
