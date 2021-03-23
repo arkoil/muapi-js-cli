@@ -2,6 +2,7 @@ const axios = require("axios");
 const catalogModel = require("./models/catalog");
 const itemModel = require("./models/catalog");
 const { ALPN_ENABLED } = require("constants");
+const { url } = require("./models/catalog");
 
 const API_PATHS = {
     auth:                   "/auth",
@@ -37,13 +38,26 @@ class MuAPICli {
         this.prev_key = prev_key;
         this.resource = resource;
         this.resource_url = resource_url;
+        this.host = host
+        this.port = port
         this.inst = axios.create({
-            baseURL: host + ":" + port,
+            baseURL: this.baseURL(),
         });
         (async () => {
             await this.init();
         })();
         
+    }
+    
+    /**
+     * @returns {string} Возвращает адрес API
+     */
+    baseURL() {
+        let url = this.host + ":" + this.port
+        if (!url.includes("http://")) {
+            url = "http://" + url
+        }
+        return url
     }
     /**
      *  вызывается в конструкторе и проверяет авторизацию и наличие ресурса
