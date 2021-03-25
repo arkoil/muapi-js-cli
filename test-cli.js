@@ -7,8 +7,11 @@ resource               = cli.resourceGet();
 resourceAdd            = cli.resourceAdd("wb", "https://www.wildberries.ru/");
 resourceCatalog        = cli.catalogs();
 checkCatalog           = cli.checkCatalogParents(["604e0c39c11b3a7dc7a35d01"]);
-resourceCatalogAdd     = cli.catalogAdd("some_name32", "some_url", "Mos", {parent_id: "605af44fc11b3a64ede0c961"});
+resourceCatalogAdd     = cli.catalogAdd("одежда", "https://www.wildberries.ru/catalog/muzhchinam/odezhda", "Moscow", {parent_id: "604e0c39c11b3a7dc7a35d01"});
 resourceCatalogItem    = cli.items();
+resourceCatalogItemAdd = cli.itemAdd(" Футболка", "https://www.wildberries.ru/catalog/11566676/detail.aspx?targetUrl=GP", "Moscow", "604e0c39c11b3a7dc7a35d01",{});
+// getItemStruct          = cli.getItemStruct("604ec877c11b3a7dc79f2016");
+searchCatalogBYId      = cli.searchCatalogsById(["604e0c39c11b3a7dc7a35d01"]);
 
 
 apiConn = async function(prom) {
@@ -25,7 +28,7 @@ apiConn = async function(prom) {
 // apiConn(checkCatalog);
 apiConn(resourceCatalogAdd);
 // apiConn(resourceCatalogItem);
-// apiConn(resourceCatalogItemAdd);
+apiConn(resourceCatalogItemAdd);
 // apiConn(getItemStruct);
 // apiConn(searchCatalogBYId);
 

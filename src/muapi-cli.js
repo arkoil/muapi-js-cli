@@ -148,9 +148,6 @@ class MuAPICli {
     async checkCatalogParents(parents) {
         let data = await this.searchCatalogsById(parents);
         if (data.success) {
-            console.log(data.api_response.data.length);
-            console.log(parents.length);
-            console.log(data.api_response.data.length < parents.length);
             if (data.api_response.data.length < parents.length) {
                 console.log("invalid");
                 throw  new Error("Not found catalog parent");
@@ -186,27 +183,28 @@ class MuAPICli {
      */
     async catalogAdd(name, url, region, other = {}, meta = "") {
         let catalog = {name: name, url: url, region: region};
-        for (let field in catalogModel) {
+        let model = { ...catalogModel }
+        for (let field in model) {
             if (other[field]) {
                 console.log(field, other[field]);
-                catalogModel[field] = other[field];
+                model[field] = other[field];
             } else {
-                delete catalogModel[field];
+                delete model[field];
             }
         }
-        let parent_id = catalogModel.parent_id;
+        let parent_id = model.parent_id;
         if (parent_id) {
-            if (!catalogModel.parents){
-                catalogModel.parents = [];
+            if (!model.parents){
+                model.parents = [];
             }
-            if (!catalogModel.parents.includes(parent_id)) {
-                catalogModel.parents.push(parent_id);
+            if (!model.parents.includes(parent_id)) {
+                model.parents.push(parent_id);
             }
         }
-        if (catalogModel.parents.length>0) {
-            await this.checkCatalogParents(catalogModel.parents);
+        if (model.parents.length>0) {
+            await this.checkCatalogParents(model.parents);
         }
-        catalog = Object.assign(catalogModel, catalog);
+        catalog = Object.assign(model, catalog);
         let data = {"resource": this.resource, "catalog": catalog};
         return this.request2API(API_PATHS.resourceCatalogAdd, this.createOptions({meta: meta}), data);
     }
@@ -235,27 +233,28 @@ class MuAPICli {
      */
     async itemAdd(name, url, region, catalog_id, other = {}, meta = "") {
         let item = {name: name, url: url, region: region, catalog_id: catalog_id};
-        for (let field in itemModel) {
+        let model = { ...itemModel }
+        for (let field in model) {
             if (other[field]) {
-                itemModel[field] = other[field];
+                model[field] = other[field];
             } else {
-                delete itemModel[field];
+                delete model[field];
             }
         }
 
         if (catalog_id) {
-            if (!itemModel.catalogs){
-                itemModel.catalogs = [];
+            if (!model.catalogs){
+                model.catalogs = [];
             }
-            if (!itemModel.catalogs.includes(catalog_id)) {
-                itemModel.catalogs.push(catalog_id);
+            if (!model.catalogs.includes(catalog_id)) {
+                model.catalogs.push(catalog_id);
             }
-            await this.checkCatalogParents(itemModel.catalogs);
+            await this.checkCatalogParents(model.catalogs);
         } else {
             throw new Error("Item must contain a catalog_id ");
         }
 
-        item = Object.assign(catalogModel, item);
+        item = Object.assign(model, item);
 
         let data = {resource: this.resource, item: item};
         return this.request2API(API_PATHS.resourceCatalogItemAdd, this.createOptions({meta: meta}), data);
