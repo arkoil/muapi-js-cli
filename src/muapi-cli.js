@@ -186,7 +186,7 @@ class MuAPICli {
         let model = { ...catalogModel }
         for (let field in model) {
             if (other[field]) {
-                console.log(field, other[field]);
+                
                 model[field] = other[field];
             } else {
                 delete model[field];
