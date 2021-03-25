@@ -50,7 +50,7 @@ class MuAPICli {
     }
     
     /**
-     * @returns {string} Возвращает адрес API
+     * @returns {string} Возвращает адрес
      */
     baseURL() {
         let url = this.host + ":" + this.port
@@ -188,6 +188,7 @@ class MuAPICli {
         let catalog = {name: name, url: url, region: region};
         for (let field in catalogModel) {
             if (other[field]) {
+                console.log(field, other[field]);
                 catalogModel[field] = other[field];
             } else {
                 delete catalogModel[field];
