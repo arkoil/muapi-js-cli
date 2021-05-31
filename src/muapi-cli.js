@@ -149,10 +149,10 @@ class MuAPICli {
         let data = await this.searchCatalogsById(parents);
         if (data.success) {
             if (data.api_response.data.length < parents.length) {
-                console.log("invalid");
+                console.error("invalid");
                 throw  new Error("Not found catalog parent");
             } else {
-                console.log("valid");
+                //console.log("valid");
                 return true;
             }
         } else {
